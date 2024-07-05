@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Vintagestory.API.Server;
 
 namespace VintageVoice.Server;
@@ -6,15 +7,18 @@ public class Instance
 {
     ICoreServerAPI serverAPI;
     public IServerNetworkChannel communicationChannel;
+    public IServerNetworkChannel infoChannel;
     private readonly VoiceSender voiceSender = new();
 
     public void Init(ICoreServerAPI api)
     {
         serverAPI = api;
-        voiceSender.Init(serverAPI.World);
-        communicationChannel = serverAPI.Network.RegisterChannel("VintageVoice_VoiceBuffer").RegisterMessageType(typeof(byte[]));
+        communicationChannel = serverAPI.Network.RegisterChannel("VintageVoice_VoiceBuffer").RegisterMessageType(typeof(List<object>));
         communicationChannel.SetMessageHandler<byte[]>(voiceSender.OnCommunicationReceived);
-        Debug.Log("Channel instanciated");
+        infoChannel = serverAPI.Network.RegisterChannel("VintageVoice_VoiceInfo").RegisterMessageType(typeof(string));
+        infoChannel.SetMessageHandler<string>(voiceSender.OnInfoReceived);
+        voiceSender.Init(serverAPI.World, communicationChannel);
+        Debug.Log("Channels instanciated");
         serverAPI.Event.PlayerJoin += voiceSender.OnPlayerJoined;
         serverAPI.Event.PlayerLeave += voiceSender.OnPlayerLeave;
         serverAPI.Event.RegisterGameTickListener(voiceSender.UpdatePlayerEars, 5000);

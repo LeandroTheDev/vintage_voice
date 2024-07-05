@@ -9,16 +9,20 @@ public class VoiceRecorder
     bool recording = false;
     bool busy = false;
     public IClientNetworkChannel communicationChannel;
+    public IClientNetworkChannel infoChannel;
 
-    public void Init(IClientNetworkChannel channel)
+    public void Init(IClientNetworkChannel channelCommunication, IClientNetworkChannel channelInfo)
     {
-        communicationChannel = channel;
+        communicationChannel = channelCommunication;
+        infoChannel = channelInfo;
+        Debug.Log("Voice Recorder initialized");
     }
 
     public void StartRecording()
     {
         if (recording)
         {
+            infoChannel.SendPacket("stop_recording");
             // Busy treatment
             busy = true;
             recording = false;
@@ -28,6 +32,7 @@ public class VoiceRecorder
         // Checking if is already recording or if the voice is busy
         if (recording || busy) return;
         recording = true;
+        infoChannel.SendPacket("start_recording");
 
         Debug.Log("Starting recording");
 
